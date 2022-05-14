@@ -1,28 +1,38 @@
-# task 01
-# https://github.com/jharbeno/miscellaneous-app-tasks/task01/README.md
-#
-# convert input.json to output.json
-
+import csv
 import json
+import copy
 
-csvFilepath = 'changes.csv'     # in
-nodesFilepath = 'nodes.json'    # in
+outputFilePath = 'output.json'
+inputFilePath = 'nodes.json'
 
-outputFilepath = 'output.json'  # out
+labels = []
 
-nodes = []                      # global nodes list
+with open('changes.csv', mode='r') as csvFile:
+    reader = csv.reader(csvFile)
+    next(csvFile)
+    for row in reader:
+        labels.append(row)
 
-## read the input file
-
-with open(nodesFilepath, 'r') as f:
-  nodes = json.load(f)
-
-## do stuff
+with open(inputFilePath, 'r') as f:
+    data = json.load(f)
 
 
+for node in data:
 
-## write the output file
+    newNode = copy.deepcopy(node)
+    for label in labels:
+        if node['core_props']['label'] == label[0]:
+            try:
+                label_value = node['label_props'][label[1]]
+                del newNode['label_props'][label[1]]
+                if label[2] != '':
+                    newNode['label_props'].update({label[2]: label_value})
 
-with open(outputFilepath, 'w') as f:
-  f.write(json.dumps(nodes, indent=4, sort_keys=True))
+            except KeyError:
+                print(f'{label[1]} {labels.index(label) + 2}')
 
+    data.insert(data.index(node), newNode)
+    data.remove(node)
+
+with open(outputFilePath, mode='w') as file:
+    json.dump(data, file, indent=4)
